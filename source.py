@@ -82,8 +82,12 @@ while running:
     viewport.fill((0,0,0))
     viewport.blit(bg_img, (i, 0))
     viewport.blit(bg_img, (viewport_width+i, 0))
+    viewport.blit(bg_img, (-viewport_width+i, 0))
     if (i <= -viewport_width):
         viewport.blit(bg_img, (viewport_width+i, 0))
+        i = 0
+    if (i >= viewport_width):
+        viewport.blit(bg_img, (-viewport_width+i, 0))
         i = 0
     if (player.rect.x > viewport_width - 200): 
         i -= 5
