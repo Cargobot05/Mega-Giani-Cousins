@@ -5,17 +5,32 @@ class Player(pygame.sprite.Sprite):
         super().__init__()
         image_not_scaled = pygame.image.load(picture_path)
         image_size = image_not_scaled.get_size()
-        self.image = pygame.transform.scale(image_not_scaled, (image_size[0]/3, image_size[1]/3))
+        self.image = pygame.transform.scale(image_not_scaled, (image_size[0]*4, image_size[1]*4))
 
         self.rect = self.image.get_rect()
         self.rect.x = pos_x
         self.rect.y = pos_y
         self.direction = "right"
 
+        self.speed = 5
+        self.const_jump_vel = 16
+        self.jump_vel = self.const_jump_vel
+        self.lives = 3
+
+        self.is_jumping = False
+
     def flip(self):
-        image_not_scaled = pygame.image.load("giani_sprite_" + self.direction + ".png")
+        image_not_scaled = pygame.image.load("giani_idle_" + self.direction + "_1.png")
         image_size = image_not_scaled.get_size()
-        self.image = pygame.transform.scale(image_not_scaled, (image_size[0]/3, image_size[1]/3))
+        self.image = pygame.transform.scale(image_not_scaled, (image_size[0]*4, image_size[1]*4))
+
+class Block():
+    def __init__(self, pos_x, pos_y, picture_path):
+        self.pos_x = pos_x
+        self.pos_y = pos_y
+        self.image - pygame.image.load(picture_path)
+
+        self.rect = self.image.get_rect()
 
 pygame.init()
 clock = pygame.time.Clock()
@@ -35,43 +50,45 @@ bg_img = pygame.image.load("background.jpg")
 bg_img = pygame.transform.scale(bg_img, (viewport_width, viewport_height))
 
 # Player object
-player = Player(viewport_width/2, viewport_height/2, "giani_sprite_right.png")
+player = Player(viewport_width/2, viewport_height/2, "giani_idle_right_1.png")
 player.rect.y = viewport_height - floor_height - player.rect.height
 
 playerGroup = pygame.sprite.Group()
 playerGroup.add(player)
 
 # Jump function
-def jump():
-    player.rect.y -= 150
+# def jump():
 
 # Move function
 
 def playerMove():
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
-        player.rect.x -= 5
+        player.rect.x -= player.speed
         if (player.direction != "left"): 
             player.direction = "left"
             player.flip()
 
     if keys[pygame.K_RIGHT]:
-        player.rect.x += 5
+        player.rect.x += player.speed
         if (player.direction != "right"): 
             player.direction = "right"
             player.flip()
-# Input function
+    
+    if player.is_jumping is False and keys[pygame.K_UP]:
+        player.is_jumping = True
+        player.const_jump_vel = player.jump_vel
+    
+    if player.is_jumping is True:
+        player.rect.y -= player.jump_vel
+        player.jump_vel -= 1
+        if player.jump_vel < -player.const_jump_vel:
+            player.is_jumping = False
+            player.jump_vel = player.const_jump_vel
 
-def checkUserInput(e):
-    if e.type == pygame.KEYDOWN:
-        if e.key == pygame.K_SPACE: return "jump"
-        if e.key == pygame.K_UP: return "jump"
-        if e.key == pygame.K_RIGHT: return "right"
-        if e.key == pygame.K_LEFT: return "left"
-
-def applyGravity():
-    if player.rect.y < viewport_height - floor_height - player.rect.height:
-        player.rect.y += 3.5
+# def applyGravity():
+#     if player.rect.y < viewport_height - floor_height - player.rect.height:
+#         player.rect.y += 3.5
 
 
 running = True
@@ -90,21 +107,18 @@ while running:
         viewport.blit(bg_img, (-viewport_width+i, 0))
         i = 0
     if (player.rect.x > viewport_width - 200): 
-        i -= 5
-        player.rect.x -= 5
+        i -= player.speed
+        player.rect.x -= player.speed
     if (player.rect.x < 200):
-        i += 5
-        player.rect.x += 5
+        i += player.speed
+        player.rect.x += player.speed
 
     playerGroup.draw(viewport)
 
-    applyGravity()
+    # applyGravity()
     playerMove()
-
-    
+ 
     for event in pygame.event.get():
-        if checkUserInput(event) == "jump": 
-            jump()
         
         if event.type == pygame.QUIT:
             pygame.quit()
