@@ -24,11 +24,14 @@ class Player(pygame.sprite.Sprite):
         image_size = image_not_scaled.get_size()
         self.image = pygame.transform.scale(image_not_scaled, (image_size[0]*4, image_size[1]*4))
 
-class Block():
+class Block(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y, picture_path):
+        super().__init__()
         self.pos_x = pos_x
         self.pos_y = pos_y
-        self.image - pygame.image.load(picture_path)
+        image_not_scaled = pygame.image.load(picture_path)
+        image_size = image_not_scaled.get_size()
+        self.image = pygame.transform.scale(image_not_scaled, (image_size[0]*4, image_size[1]*4))
 
         self.rect = self.image.get_rect()
 
@@ -55,6 +58,15 @@ player.rect.y = viewport_height - floor_height - player.rect.height
 
 playerGroup = pygame.sprite.Group()
 playerGroup.add(player)
+
+#! Floor tiles and sprite group
+# floorGroup = pygame.sprite.Group()
+
+# block_size = pygame.image.load("block.png").get_size()
+# for i in range(0, viewport_width//block_size[1], 1):
+#     floor = Block(i * block_size[1], viewport_height - block_size[0], "block.png")
+#     floorGroup.add(floor)
+
 
 # Jump function
 # def jump():
@@ -114,6 +126,7 @@ while running:
         player.rect.x += player.speed
 
     playerGroup.draw(viewport)
+    floorGroup.draw(viewport)
 
     # applyGravity()
     playerMove()
