@@ -62,6 +62,7 @@ playerGroup.add(player)
 #! Floor tiles and sprite group
 # floorGroup = pygame.sprite.Group()
 
+
 # block_size = pygame.image.load("block.png").get_size()
 # for i in range(0, viewport_width//block_size[1], 1):
 #     floor = Block(i * block_size[1], viewport_height - block_size[0], "block.png")
@@ -98,10 +99,6 @@ def playerMove():
             player.is_jumping = False
             player.jump_vel = player.const_jump_vel
 
-# def applyGravity():
-#     if player.rect.y < viewport_height - floor_height - player.rect.height:
-#         player.rect.y += 3.5
-
 
 running = True
 i = 0
@@ -126,7 +123,7 @@ while running:
         player.rect.x += player.speed
 
     playerGroup.draw(viewport)
-    floorGroup.draw(viewport)
+    #floorGroup.draw(viewport)
 
     # applyGravity()
     playerMove()
