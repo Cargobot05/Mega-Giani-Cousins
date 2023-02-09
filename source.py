@@ -1,132 +1,125 @@
-import pygame, sys
+import pygame, random, sys
+
+PLAYER_JUMP_VEL = 16
+DIRECTION_LEFT = "left"
+DIRECTION_RIGHT = "right"
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos_x, pos_y, picture_path):
+    def __init__(self, pos_x, pos_y, image_path):
         super().__init__()
-        image_not_scaled = pygame.image.load(picture_path)
-        image_size = image_not_scaled.get_size()
-        self.image = pygame.transform.scale(image_not_scaled, (image_size[0]*4, image_size[1]*4))
+        image_size = pygame.image.load(image_path).get_size()
+        self.image = pygame.transform.scale(pygame.image.load(image_path), (image_size[0]*4, image_size[1]*4))
 
         self.rect = self.image.get_rect()
         self.rect.x = pos_x
         self.rect.y = pos_y
-        self.direction = "right"
+        self.direction = DIRECTION_RIGHT
 
         self.speed = 5
-        self.const_jump_vel = 16
-        self.jump_vel = self.const_jump_vel
+        self.jump_vel = 0
         self.lives = 3
 
         self.is_jumping = False
 
     def flip(self):
-        image_not_scaled = pygame.image.load("giani_idle_" + self.direction + "_1.png")
-        image_size = image_not_scaled.get_size()
-        self.image = pygame.transform.scale(image_not_scaled, (image_size[0]*4, image_size[1]*4))
+        image_size = pygame.image.load("player_idle_" + self.direction + "_1.png").get_size()
+        self.image = pygame.transform.scale(pygame.image.load("player_idle_" + self.direction + "_1.png"), (image_size[0]*4, image_size[1]*4))
 
 class Block(pygame.sprite.Sprite):
-    def __init__(self, pos_x, pos_y, picture_path):
+    def __init__(self, pos_x, pos_y, image_path):
         super().__init__()
-        self.pos_x = pos_x
-        self.pos_y = pos_y
-        image_not_scaled = pygame.image.load(picture_path)
-        image_size = image_not_scaled.get_size()
-        self.image = pygame.transform.scale(image_not_scaled, (image_size[0]*4, image_size[1]*4))
+        image_size = pygame.image.load(image_path).get_size()
+        self.image = pygame.transform.scale(pygame.image.load(image_path), (image_size[0]*4, image_size[1]*4))
 
         self.rect = self.image.get_rect()
+        self.rect.x = pos_x
+        self.rect.y = pos_y
 
 pygame.init()
 clock = pygame.time.Clock()
 
 # Game screen
-viewport_width = 1280
-viewport_height = 720
-viewport = pygame.display.set_mode([viewport_width, viewport_height])
+VIEWPORT_WIDTH = 1280
+VIEWPORT_HEIGHT = 720
+viewport = pygame.display.set_mode([VIEWPORT_WIDTH, VIEWPORT_HEIGHT])
 pygame.display.set_caption("Mega Giani Cousins")
 
 # Defining floor value
 
-floor_height = 97
+FLOOR_HEIGHT = 97
+MAX_BLOCK_HEIGHT = 500
 
 # Background
 bg_img = pygame.image.load("background.jpg")
-bg_img = pygame.transform.scale(bg_img, (viewport_width, viewport_height))
+bg_img = pygame.transform.scale(bg_img, (VIEWPORT_WIDTH, VIEWPORT_HEIGHT))
 
 # Player object
-player = Player(viewport_width/2, viewport_height/2, "giani_idle_right_1.png")
-player.rect.y = viewport_height - floor_height - player.rect.height
+player = Player(VIEWPORT_WIDTH/2, VIEWPORT_HEIGHT/2, "player_idle_right_1.png")
+player.rect.y = VIEWPORT_HEIGHT - FLOOR_HEIGHT - player.rect.height
 
-playerGroup = pygame.sprite.Group()
-playerGroup.add(player)
-
-#! Floor tiles and sprite group
-# floorGroup = pygame.sprite.Group()
-
-
-# block_size = pygame.image.load("block.png").get_size()
-# for i in range(0, viewport_width//block_size[1], 1):
-#     floor = Block(i * block_size[1], viewport_height - block_size[0], "block.png")
-#     floorGroup.add(floor)
-
-
-# Jump function
-# def jump():
+blockGroup = pygame.sprite.Group()
+original_block_image_size = pygame.image.load("block.png").get_size()
+BLOCK_SIZE = pygame.transform.scale(pygame.image.load("block.png"), (original_block_image_size[0]*4, original_block_image_size[1]*4)).get_size()
+for i in range(0, VIEWPORT_WIDTH//(2*BLOCK_SIZE[1]), 1):
+    print(BLOCK_SIZE[1])
+    print(random.randint(VIEWPORT_HEIGHT -  MAX_BLOCK_HEIGHT, VIEWPORT_HEIGHT - FLOOR_HEIGHT))
+    block = Block(i * 2 * BLOCK_SIZE[1], random.randint(VIEWPORT_HEIGHT -  MAX_BLOCK_HEIGHT, VIEWPORT_HEIGHT - FLOOR_HEIGHT - BLOCK_SIZE[1]), "block.png")
+    blockGroup.add(block)
 
 # Move function
 
-def playerMove():
+def movePlayer():
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
         player.rect.x -= player.speed
-        if (player.direction != "left"): 
-            player.direction = "left"
+        if (player.direction != DIRECTION_LEFT): 
+            player.direction = DIRECTION_LEFT
             player.flip()
 
     if keys[pygame.K_RIGHT]:
         player.rect.x += player.speed
-        if (player.direction != "right"): 
-            player.direction = "right"
+        if (player.direction != DIRECTION_RIGHT): 
+            player.direction = DIRECTION_RIGHT
             player.flip()
     
-    if player.is_jumping is False and keys[pygame.K_UP]:
+    if player.is_jumping is False and (keys[pygame.K_UP] or keys[pygame.K_SPACE]):
         player.is_jumping = True
-        player.const_jump_vel = player.jump_vel
+        player.jump_vel = PLAYER_JUMP_VEL
     
     if player.is_jumping is True:
         player.rect.y -= player.jump_vel
         player.jump_vel -= 1
-        if player.jump_vel < -player.const_jump_vel:
+        if player.jump_vel < -PLAYER_JUMP_VEL:
             player.is_jumping = False
-            player.jump_vel = player.const_jump_vel
-
+            player.jump_vel = PLAYER_JUMP_VEL
 
 running = True
-i = 0
+bg_offset = 0
+ViewportEdgePadding = 200
 
 while running:
     
     viewport.fill((0,0,0))
-    viewport.blit(bg_img, (i, 0))
-    viewport.blit(bg_img, (viewport_width+i, 0))
-    viewport.blit(bg_img, (-viewport_width+i, 0))
-    if (i <= -viewport_width):
-        viewport.blit(bg_img, (viewport_width+i, 0))
-        i = 0
-    if (i >= viewport_width):
-        viewport.blit(bg_img, (-viewport_width+i, 0))
-        i = 0
-    if (player.rect.x > viewport_width - 200): 
-        i -= player.speed
+    viewport.blit(bg_img, (bg_offset, 0))
+    viewport.blit(bg_img, (VIEWPORT_WIDTH + bg_offset, 0))
+    viewport.blit(bg_img, (-VIEWPORT_WIDTH + bg_offset, 0))
+    if (bg_offset <= -VIEWPORT_WIDTH):
+        viewport.blit(bg_img, (VIEWPORT_WIDTH + bg_offset, 0))
+        bg_offset = 0
+    if (bg_offset >= VIEWPORT_WIDTH):
+        viewport.blit(bg_img, (-VIEWPORT_WIDTH + bg_offset, 0))
+        bg_offset = 0
+    if (player.rect.x > VIEWPORT_WIDTH - ViewportEdgePadding): 
+        bg_offset -= player.speed
         player.rect.x -= player.speed
-    if (player.rect.x < 200):
-        i += player.speed
+    if (player.rect.x < ViewportEdgePadding):
+        bg_offset += player.speed
         player.rect.x += player.speed
 
-    playerGroup.draw(viewport)
-    #floorGroup.draw(viewport)
+    viewport.blit(player.image, (player.rect.x, player.rect.y))
+    blockGroup.draw(viewport)
 
-    # applyGravity()
-    playerMove()
+    movePlayer()
  
     for event in pygame.event.get():
         
