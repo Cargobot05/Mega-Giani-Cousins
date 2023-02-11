@@ -4,6 +4,13 @@ PLAYER_JUMP_VEL = 16
 DIRECTION_LEFT = "left"
 DIRECTION_RIGHT = "right"
 
+VIEWPORT_WIDTH = 1280
+VIEWPORT_HEIGHT = 720
+VIEWPORT_EDGE_PADDING = 200
+
+FLOOR_HEIGHT = 97
+MAX_BLOCK_HEIGHT = 500
+
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y, image_path):
         super().__init__()
@@ -35,37 +42,6 @@ class Block(pygame.sprite.Sprite):
         self.rect.x = pos_x
         self.rect.y = pos_y
 
-pygame.init()
-clock = pygame.time.Clock()
-
-# Game screen
-VIEWPORT_WIDTH = 1280
-VIEWPORT_HEIGHT = 720
-viewport = pygame.display.set_mode([VIEWPORT_WIDTH, VIEWPORT_HEIGHT])
-pygame.display.set_caption("Mega Giani Cousins")
-
-# Defining floor value
-
-FLOOR_HEIGHT = 97
-MAX_BLOCK_HEIGHT = 500
-
-# Background
-bg_img = pygame.image.load("background.jpg")
-bg_img = pygame.transform.scale(bg_img, (VIEWPORT_WIDTH, VIEWPORT_HEIGHT))
-
-# Player object
-player = Player(VIEWPORT_WIDTH/2, VIEWPORT_HEIGHT/2, "player_idle_right_1.png")
-player.rect.y = VIEWPORT_HEIGHT - FLOOR_HEIGHT - player.rect.height
-
-blockGroup = pygame.sprite.Group()
-original_block_image_size = pygame.image.load("block.png").get_size()
-BLOCK_SIZE = pygame.transform.scale(pygame.image.load("block.png"), (original_block_image_size[0]*4, original_block_image_size[1]*4)).get_size()
-for i in range(0, VIEWPORT_WIDTH//(2*BLOCK_SIZE[1]), 1):
-    print(BLOCK_SIZE[1])
-    print(random.randint(VIEWPORT_HEIGHT -  MAX_BLOCK_HEIGHT, VIEWPORT_HEIGHT - FLOOR_HEIGHT))
-    block = Block(i * 2 * BLOCK_SIZE[1], random.randint(VIEWPORT_HEIGHT -  MAX_BLOCK_HEIGHT, VIEWPORT_HEIGHT - FLOOR_HEIGHT - BLOCK_SIZE[1]), "block.png")
-    blockGroup.add(block)
-
 # Move function
 
 def movePlayer():
@@ -93,9 +69,35 @@ def movePlayer():
             player.is_jumping = False
             player.jump_vel = PLAYER_JUMP_VEL
 
+pygame.init()
+clock = pygame.time.Clock()
+
+# Game screen
+viewport = pygame.display.set_mode([VIEWPORT_WIDTH, VIEWPORT_HEIGHT])
+pygame.display.set_caption("Mega Giani Cousins")
+
+# Background
+bg_img = pygame.image.load("background.jpg")
+bg_img = pygame.transform.scale(bg_img, (VIEWPORT_WIDTH, VIEWPORT_HEIGHT))
+
+# Player object
+player = Player(VIEWPORT_WIDTH/2, VIEWPORT_HEIGHT/2, "player_idle_right_1.png")
+player.rect.y = VIEWPORT_HEIGHT - FLOOR_HEIGHT - player.rect.height
+
+# Block objects and sprite group
+blockGroup = pygame.sprite.Group()
+original_block_image_size = pygame.image.load("block.png").get_size()
+BLOCK_SIZE = pygame.transform.scale(pygame.image.load("block.png"), (original_block_image_size[0]*4, original_block_image_size[1]*4)).get_size()
+
+# Random block position generator
+for i in range(0, VIEWPORT_WIDTH//(2*BLOCK_SIZE[1]), 1):
+    print(BLOCK_SIZE[1])
+    print(random.randint(VIEWPORT_HEIGHT -  MAX_BLOCK_HEIGHT, VIEWPORT_HEIGHT - FLOOR_HEIGHT))
+    block = Block(i * 2 * BLOCK_SIZE[1], random.randint(VIEWPORT_HEIGHT -  MAX_BLOCK_HEIGHT, VIEWPORT_HEIGHT - FLOOR_HEIGHT - BLOCK_SIZE[1]), "block.png")
+    blockGroup.add(block)
+
 running = True
 bg_offset = 0
-ViewportEdgePadding = 200
 
 while running:
     
@@ -109,10 +111,10 @@ while running:
     if (bg_offset >= VIEWPORT_WIDTH):
         viewport.blit(bg_img, (-VIEWPORT_WIDTH + bg_offset, 0))
         bg_offset = 0
-    if (player.rect.x > VIEWPORT_WIDTH - ViewportEdgePadding): 
+    if (player.rect.x > VIEWPORT_WIDTH - VIEWPORT_EDGE_PADDING): 
         bg_offset -= player.speed
         player.rect.x -= player.speed
-    if (player.rect.x < ViewportEdgePadding):
+    if (player.rect.x < VIEWPORT_EDGE_PADDING):
         bg_offset += player.speed
         player.rect.x += player.speed
 
