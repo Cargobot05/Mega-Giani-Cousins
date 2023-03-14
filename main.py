@@ -6,7 +6,7 @@ DIRECTION_RIGHT = "right"
 
 VIEWPORT_WIDTH = 1280
 VIEWPORT_HEIGHT = 720
-VIEWPORT_EDGE_PADDING = 200
+VIEWPORT_EDGE_PADDING = 400
 
 FLOOR_HEIGHT = 97
 MAX_BLOCK_HEIGHT = 500
@@ -69,6 +69,27 @@ def movePlayer():
             player.is_jumping = False
             player.jump_vel = PLAYER_JUMP_VEL
 
+
+def moveBackground(object, object_offset):
+    viewport.blit(object, (object_offset, 0))
+    viewport.blit(object, (VIEWPORT_WIDTH + object_offset, 0))
+    viewport.blit(object, (-VIEWPORT_WIDTH + object_offset, 0))
+    if (object_offset <= -VIEWPORT_WIDTH):
+        viewport.blit(object, (VIEWPORT_WIDTH + object_offset, 0))
+        object_offset = 0
+    if (object_offset >= VIEWPORT_WIDTH):
+        viewport.blit(object, (-VIEWPORT_WIDTH + object_offset, 0))
+        object_offset = 0
+    return bg_offset
+
+def moveBlock():
+
+    for element in blockGroup.sprites():
+        if (player.direction == DIRECTION_RIGHT):
+            element.rect.x -= player.speed
+        if (player.direction == DIRECTION_LEFT):
+            element.rect.x += player.speed
+
 pygame.init()
 clock = pygame.time.Clock()
 
@@ -91,35 +112,28 @@ BLOCK_SIZE = pygame.transform.scale(pygame.image.load("block.png"), (original_bl
 
 # Random block position generator
 for i in range(0, VIEWPORT_WIDTH//(2*BLOCK_SIZE[1]), 1):
-    print(BLOCK_SIZE[1])
-    print(random.randint(VIEWPORT_HEIGHT -  MAX_BLOCK_HEIGHT, VIEWPORT_HEIGHT - FLOOR_HEIGHT))
     block = Block(i * 2 * BLOCK_SIZE[1], random.randint(VIEWPORT_HEIGHT -  MAX_BLOCK_HEIGHT, VIEWPORT_HEIGHT - FLOOR_HEIGHT - BLOCK_SIZE[1]), "block.png")
     blockGroup.add(block)
 
-running = True
 bg_offset = 0
 
+running = True
+
 while running:
-    
-    viewport.fill((0,0,0))
-    viewport.blit(bg_img, (bg_offset, 0))
-    viewport.blit(bg_img, (VIEWPORT_WIDTH + bg_offset, 0))
-    viewport.blit(bg_img, (-VIEWPORT_WIDTH + bg_offset, 0))
-    if (bg_offset <= -VIEWPORT_WIDTH):
-        viewport.blit(bg_img, (VIEWPORT_WIDTH + bg_offset, 0))
-        bg_offset = 0
-    if (bg_offset >= VIEWPORT_WIDTH):
-        viewport.blit(bg_img, (-VIEWPORT_WIDTH + bg_offset, 0))
-        bg_offset = 0
-    if (player.rect.x > VIEWPORT_WIDTH - VIEWPORT_EDGE_PADDING): 
-        bg_offset -= player.speed
-        player.rect.x -= player.speed
-    if (player.rect.x < VIEWPORT_EDGE_PADDING):
-        bg_offset += player.speed
-        player.rect.x += player.speed
+
+    bg_offset = moveBackground(bg_img, bg_offset)
 
     viewport.blit(player.image, (player.rect.x, player.rect.y))
     blockGroup.draw(viewport)
+
+    if (player.rect.x > VIEWPORT_WIDTH - VIEWPORT_EDGE_PADDING): 
+        bg_offset -= player.speed
+        moveBlock()
+        player.rect.x -= player.speed
+    if (player.rect.x < VIEWPORT_EDGE_PADDING):
+        bg_offset += player.speed
+        moveBlock()
+        player.rect.x += player.speed
 
     movePlayer()
  
