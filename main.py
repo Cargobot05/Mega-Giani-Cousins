@@ -1,3 +1,4 @@
+import asyncio
 from math import floor
 import pygame, random, sys
 
@@ -52,7 +53,7 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(pygame.image.load("player_idle_" + self.direction + "_1.png"),  (BLOCK_SIZE - 5, (BLOCK_SIZE - 5)*image_size[1]/image_size[0]))
 
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, type, pos_x, bottom_pos_y, territory_span, movement_speed, image_path):
+    def __init__(self, type, pos_x, bottom_pos_y, movement_speed, image_path):
         super().__init__()
         image_size = pygame.image.load(image_path).get_size()
         self.image = pygame.transform.scale(pygame.image.load(image_path), (BLOCK_SIZE, (BLOCK_SIZE)*image_size[1]/image_size[0]))
@@ -63,28 +64,25 @@ class Enemy(pygame.sprite.Sprite):
 
         self.type = type
 
-        self.territory_span = territory_span
-
-        self.territory_limit_left = self.rect.x - territory_span
-        self.territory_limit_right = self.rect.x + territory_span
-
         self.movement_speed = movement_speed
         self.direction = DIRECTION_LEFT
 
     def flip(self):
         self.image = pygame.transform.flip(self.image, True, False)
 
-    def patrol(self):
+    def attack(self):
         if (self.direction == DIRECTION_RIGHT):
-            if (self.rect.x < self.territory_limit_right):
+            if (self.rect.x < player.rect.x):
                 self.rect.x += self.movement_speed
             else:
+                #await asyncio.sleep(2)
                 self.direction = DIRECTION_LEFT
                 self.flip()
         if (self.direction == DIRECTION_LEFT):
-            if (self.rect.x > self.territory_limit_left):
+            if (self.rect.x > player.rect.x):
                 self.rect.x -= self.movement_speed
             else:
+                #await asyncio.sleep(2)
                 self.direction = DIRECTION_RIGHT
                 self.flip()
         
@@ -210,6 +208,10 @@ def move_player():
                     player.vel_y = 0
                     player.rect.left = collision_block.rect.right
 
+    for block in block_group:
+        if check_top_collision(block) and (check_left_collision(block) or check_right_collision(block)):
+            surface_normal = -GRAVITY
+
 
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
@@ -260,6 +262,7 @@ stage_start = False
 scene_count = 0
 
 while running:
+    print (surface_normal)
     move_background()
     move_player()
     collect_coin()
@@ -291,16 +294,15 @@ while running:
                 block_group.add(block)
 
     if (bg_offset == -VIEWPORT_WIDTH + 5): scene_count += 1
-
-    print(scene_count)
     
     generate_platforms = False
 
     if (game_stage == GROUND_FIGHT):
         if (stage_start == True):
-            crow = Enemy("stabby crow", player.rect.x + 100, VIEWPORT_HEIGHT - FLOOR_HEIGHT, 250, 2, "stabby_crow.png")
+            crow = Enemy("stabby crow", VIEWPORT_WIDTH, VIEWPORT_HEIGHT - FLOOR_HEIGHT, 2, "stabby_crow.png")
             enemy_group.add(crow)
             stage_start = False
+        crow.attack()
 
     if (game_stage == COINS):
         if (player.rect.x > VIEWPORT_WIDTH - VIEWPORT_EDGE_PADDING): 
@@ -324,7 +326,7 @@ while running:
     if (bg_offset != 0 and player.rect.x != 0 and scene_count <= 3):
         generate_platforms = True
 
-    if (scene_count == 5):
+    if (scene_count == 5 and game_stage == COINS):
         game_stage = GROUND_FIGHT
         stage_start = True
         block_group.empty() 
